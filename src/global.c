@@ -19,6 +19,12 @@ int Workload_Mode = IOMODE_RW; // *Default
 SSDEvictionStrategy EvictStrategy = SAC; // *Default
 long Cycle_Length;
 
+// spl info
+long Cycle_Length_Cur = 0;
+long Count_Cycle = 0;
+long flag = 0;
+double result_spl = 0.0;
+
 int NO_REAL_DISK_IO = 0;
 int NO_CACHE = 0;
 int EMULATION = 0;
@@ -28,11 +34,11 @@ struct RuntimeSTAT* STT;
 blksize_t BLKSZ = 4096;
 
 // Cache Layer
-blksize_t NBLOCK_SSD_CACHE = 8000000; // 32GB
-blksize_t NTABLE_SSD_CACHE = 8000000; // equal with NBLOCK_SSD_CACHE
+blksize_t NBLOCK_SSD_CACHE = (8000000 / 32); // 32GB
+blksize_t NTABLE_SSD_CACHE = (8000000 / 32); // equal with NBLOCK_SSD_CACHE
 
 // SMR layer
-blksize_t NBLOCK_SMR_PB = 30 * 5000;
+blksize_t NBLOCK_SMR_PB = 10 * 5000; //size: block * 4kB 
 blkcnt_t  NZONES = 400000;/* size = 8TB */ //194180;    // NZONES * ZONESZ =
 blksize_t ZONESZ = 5000 * 4096;//20MB    // Unit: Byte.
 

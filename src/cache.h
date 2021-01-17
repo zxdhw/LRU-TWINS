@@ -30,6 +30,13 @@
     #define multi_SHM_mutex_unlock(lock)        //SHM_mutex_unlock(lock)
 #endif // MULTIUSER
 
+// spl info stat
+typedef struct
+{
+    long    band_id;
+    long    cnt;
+    long    cycle;
+}SplStat;
 
 typedef struct
 {
