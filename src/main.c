@@ -127,6 +127,8 @@ int analyze_opts(int argc, char **argv)
                 EvictStrategy = MOST;
             else if (strcmp(optarg, "MOST_CDC") == 0)
                 EvictStrategy = MOST_CDC;
+            else if (strcmp(optarg, "LRU_SBSC") == 0)
+                EvictStrategy = LRU_SBSC;
             else
                 sac_error_exit("No such algorithm matched: %s.", optarg);
 

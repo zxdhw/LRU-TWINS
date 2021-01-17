@@ -28,8 +28,8 @@ struct RuntimeSTAT* STT;
 blksize_t BLKSZ = 4096;
 
 // Cache Layer
-blksize_t NBLOCK_SSD_CACHE = 8000000; // 32GB
-blksize_t NTABLE_SSD_CACHE = 8000000; // equal with NBLOCK_SSD_CACHE
+blksize_t NBLOCK_SSD_CACHE = (8000000 / 64); // cache size = NBLOCK_SSD_CACHE * BLKSZ 
+blksize_t NTABLE_SSD_CACHE = (8000000 / 64); // equal with NBLOCK_SSD_CACHE
 
 // SMR layer
 blksize_t NBLOCK_SMR_PB = 30 * 5000;

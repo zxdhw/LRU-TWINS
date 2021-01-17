@@ -1,4 +1,3 @@
-
 #include <sys/types.h>
 #include <stdio.h> // FILE*
 #include "statusDef.h"
@@ -72,6 +71,7 @@ typedef enum
     SAC,
     MOST,
     MOST_CDC,
+    LRU_SBSC,
     LRU_private
 }SSDEvictionStrategy;
 

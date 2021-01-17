@@ -14,7 +14,7 @@ CPPFLAGS += -I$(SAC_ROOT) -I$(SAC_SRC) -I$(SAC_SRC)/smr-emulator -I$(SAC_SRC)/st
 
 RM = rm -rf
 #RMSHM = rm -f /dev/shm/*
-OBJS = global.o main.o report.o timerUtils.o shmlib.o hashtable_utils.o cache.o trace2call.o sac.o most.o most_cdc.o lru_private.o hashtb_pb.o emulator_v2.o xstrtoumax.o
+OBJS = global.o main.o report.o timerUtils.o shmlib.o bandhash.o hashtable_utils.o cache.o trace2call.o sac.o most.o most_cdc.o lru_private.o lru_sbsc.o hashtb_pb.o emulator_v2.o xstrtoumax.o
 
 
 all: $(OBJS) sac
@@ -40,6 +40,9 @@ timerUtils.o: ${SAC_SRC}/timerUtils.c
 hashtable_utils.o: ${SAC_SRC}/hashtable_utils.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
+bandhash.o: ${SAC_SRC}/bandhash.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
+
 cache.o: ${SAC_SRC}/cache.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
@@ -62,6 +65,9 @@ lru.o: ${SAC_ALG}/lru.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
 lru_private.o: ${SAC_ALG}/lru_private.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
+
+lru_sbsc.o: ${SAC_ALG}/lru_sbsc.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
 lru_cdc.o: ${SAC_ALG}/lru_cdc.c

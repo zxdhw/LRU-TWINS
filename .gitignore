@@ -1,4 +1,5 @@
 *.log
 *.req
 *.o
+.vscode/
 sac
