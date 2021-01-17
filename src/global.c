@@ -31,11 +31,15 @@ blksize_t BLKSZ = 4096;
 blksize_t NBLOCK_SSD_CACHE = 8000000; // 32GB
 blksize_t NTABLE_SSD_CACHE = 8000000; // equal with NBLOCK_SSD_CACHE
 
+// CB SB ES 淘汰信息
+long evict_ES = 0;
+long evict_SB = 0;
+long evict_CB = 0;
+
 // SMR layer
 blksize_t NBLOCK_SMR_PB = 30 * 5000;
 blkcnt_t  NZONES = 400000;/* size = 8TB */ //194180;    // NZONES * ZONESZ =
 blksize_t ZONESZ = 5000 * 4096;//20MB    // Unit: Byte.
-
 
 // Device Files
 char* simu_smr_fifo_device = NULL;// "/mnt/smr/pb";

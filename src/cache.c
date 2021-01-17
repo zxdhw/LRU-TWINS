@@ -18,6 +18,11 @@
 SSDBufDespCtrl *ssd_buf_desp_ctrl;
 SSDBufDesp *ssd_buf_desps;
 
+// 新增
+static int write_back_from_ES(long buf_despid_array[])
+
+
+
 /* If Defined R/W Cache Space Static Allocated */
 
 static int init_SSDDescriptorBuffer();
@@ -85,14 +90,14 @@ static int
 init_SSDDescriptorBuffer()
 {
     int stat = multi_SHM_lock_n_check("LOCK_SSDBUF_DESP");
-    if (stat == 0)  
+    if (stat == 0)
     {
         ssd_buf_desp_ctrl = (SSDBufDespCtrl *)multi_SHM_alloc(SHM_SSDBUF_DESP_CTRL, sizeof(SSDBufDespCtrl));
         ssd_buf_desps = (SSDBufDesp *)multi_SHM_alloc(SHM_SSDBUF_DESPS, sizeof(SSDBufDesp) * NBLOCK_SSD_CACHE);
 
         ssd_buf_desp_ctrl->n_usedssd = 0;
         ssd_buf_desp_ctrl->first_freessd = 0;
-        multi_SHM_mutex_init(&ssd_buf_desp_ctrl->lock); // ？？？？
+        multi_SHM_mutex_init(&ssd_buf_desp_ctrl->lock);
 
         long i;
         SSDBufDesp *ssd_buf_hdr = ssd_buf_desps;
@@ -106,7 +111,7 @@ init_SSDDescriptorBuffer()
         }
         ssd_buf_desps[NBLOCK_SSD_CACHE - 1].next_freessd = -1;
     }
-    else  // multiuser mode
+    else
     {
         ssd_buf_desp_ctrl = (SSDBufDespCtrl *)multi_SHM_get(SHM_SSDBUF_DESP_CTRL, sizeof(SSDBufDespCtrl));
         ssd_buf_desps = (SSDBufDesp *)multi_SHM_get(SHM_SSDBUF_DESPS, sizeof(SSDBufDesp) * NBLOCK_SSD_CACHE);
@@ -211,6 +216,13 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
         flagOp(ssd_buf_hdr, alloc4What);  // tell strategy block's flag changes.
         Strategy_Desp_HitIn(ssd_buf_hdr); // need lock.
 
+        // !!! 将从ES淘汰的块写回
+        if (evict_ES > 0)
+        {
+            write_back_from_ES(buf_despid_array);
+        }
+        
+
         STT->hitnum_s++;
         *found = 1;
 
@@ -222,9 +234,10 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
     //*isCallBack = CM_TryCallBack(ssd_buf_tag);
     enum_t_vict suggest_type = ENUM_B_Any;
 
+
     /* When there is NO free SSD space for cache,
      * pick serveral in-used cache block to evict according to strategy */
-    if ((ssd_buf_hdr = pop_freebuf()) == NULL)
+    if ((ssd_buf_hdr = pop_freebuf()) == NULL || (blknum_CB == max_blknum_CB))
     {
         // Cache Out:
         if (STT->incache_n_clean == 0)
@@ -255,29 +268,13 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
             exit(EXIT_FAILURE);
         }
 
-        int k = 0;
-        while (k < n_evict)
+        // !!! 将从ES淘汰的块写回
+        if (evict_ES > 0)
         {
-            long out_despId = buf_despid_array[k];
-            ssd_buf_hdr = &ssd_buf_desps[out_despId];
-
-            // TODO Flush
-            flushSSDBuffer(ssd_buf_hdr);
-
-            /* Reset Metadata */
-            // Clear Hashtable item.
-            SSDBufTag oldtag = ssd_buf_hdr->ssd_buf_tag;
-            unsigned long hash = HashTab_GetHashCode(oldtag);
-            HashTab_Delete(oldtag, hash);
-
-            // Reset buffer descriptor info.
-            IsDirty(ssd_buf_hdr->ssd_buf_flag) ? STT->incache_n_dirty-- : STT->incache_n_clean--;
-            ssd_buf_hdr->ssd_buf_flag &= ~(SSD_BUF_VALID | SSD_BUF_DIRTY);
-
-            // Push back to free list
-            push_freebuf(ssd_buf_hdr);
-            k++;
+            write_back_from_ES(buf_despid_array);
         }
+        
+
         ssd_buf_hdr = pop_freebuf();
     }
 
@@ -292,13 +289,14 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
     return ssd_buf_hdr;
 }
 
+
 static int
 initStrategySSDBuffer()
 {
     switch (EvictStrategy)
     {
     case LRU_private:
-        return initSSDBufferFor_LRU_private();
+        return Init_SSDBuf_For_LRU_private();
     case SAC:
         return Init_SAC();
         //    case OLDPORE:
@@ -340,7 +338,7 @@ Strategy_Desp_HitIn(SSDBufDesp *desp)
     {
         //        case LRU_global:        return hitInLRUBuffer(desp->serial_id);
     case LRU_private:
-        return hitInBuffer_LRU_private(desp->serial_id);
+        return HitIn_Buf_LRU_private(desp->serial_id);
     case SAC:
         return Hit_SAC(desp->serial_id, desp->ssd_buf_flag);
     case MOST:
@@ -359,7 +357,7 @@ Strategy_Desp_LogIn(SSDBufDesp *desp)
     {
         //        case LRU_global:        return insertLRUBuffer(serial_id);
     case LRU_private:
-        return insertBuffer_LRU_private(desp->serial_id);
+        return Insert_Buf_LRU_private(desp->serial_id,desp->ssd_buf_tag);
         //        case LRU_batch:         return insertBuffer_LRU_batch(serial_id);
         //        case Most:              return LogInMostBuffer(desp->serial_id,desp->ssd_buf_tag);
         //    case PORE:
@@ -500,6 +498,47 @@ void write_block(off_t offset, char *ssd_buffer)
 /******************
 **** Utilities*****
 *******************/
+
+
+static int
+write_back_from_ES(long buf_despid_array[] )
+{
+    int k = 0;
+    while (k < evict_ES)
+    {
+        long out_despId = buf_despid_array[k];
+        ssd_buf_hdr = &ssd_buf_desps[out_despId];
+
+        // TODO Flush
+        flushSSDBuffer(ssd_buf_hdr);
+
+        /* Reset Metadata */
+        // Clear Hashtable item.
+        SSDBufTag oldtag = ssd_buf_hdr->ssd_buf_tag;
+        unsigned long hash = HashTab_GetHashCode(oldtag);
+        HashTab_Delete(oldtag, hash);
+
+        // Reset buffer descriptor info.
+        IsDirty(ssd_buf_hdr->ssd_buf_flag) ? STT->incache_n_dirty-- : STT->incache_n_clean--;
+        ssd_buf_hdr->ssd_buf_flag &= ~(SSD_BUF_VALID | SSD_BUF_DIRTY);
+
+        // Push back to free list
+        push_freebuf(ssd_buf_hdr);
+        k++;
+    }
+
+    // 重置为0
+    evict_ES = 0;
+
+    return  0;
+}
+
+
+
+
+
+
+
 
 static int dev_pread(int fd, void *buf, size_t nbytes, off_t offset)
 {

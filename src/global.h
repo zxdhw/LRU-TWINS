@@ -9,6 +9,10 @@
 #define SSD_BUF_VALID 0x01
 #define SSD_BUF_DIRTY 0x02
 
+#define EVICT_GRAIN_SB  20000
+#define EVICT_GRAIN_ES  128
+
+
 /* ENV */
 
 //extern char* PROJ_ROOT;
@@ -96,6 +100,12 @@ extern blksize_t BLKSZ;
 // Cache Layer
 extern blksize_t NBLOCK_SSD_CACHE;
 extern blksize_t NTABLE_SSD_CACHE; // equal with NBLOCK_SSD_CACHE
+
+// CB SB ES 
+extern int evict_ES ;
+extern int evict_SB ;
+extern int evict_CB ;
+
 
 // SMR layer
 extern blksize_t NBLOCK_SMR_PB;
