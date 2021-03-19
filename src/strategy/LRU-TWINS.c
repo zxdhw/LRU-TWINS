@@ -538,11 +538,8 @@ delete_from_LRU(StrategyDesp_LRU_private * ssd_buf_hdr_for_lru)
         // band链表信息改变
         ssd_buf_hdr_for_lru->bandID = 0;
         delete_from_band(ssd_buf_hdr_for_lru , myband);
-
-
     }
     
-
     // 重置该块的上下链接为-1
     ssd_buf_hdr_for_lru->pre_self_lru = ssd_buf_hdr_for_lru->next_self_lru = -1;
     // 重置该块的所属链表及bandID
