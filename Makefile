@@ -14,7 +14,7 @@ CPPFLAGS += -I$(SAC_ROOT) -I$(SAC_SRC) -I$(SAC_SRC)/smr-emulator -I$(SAC_SRC)/st
 
 RM = rm -rf
 #RMSHM = rm -f /dev/shm/*
-OBJS = global.o main.o report.o timerUtils.o shmlib.o hashtable_utils.o cache.o trace2call.o sac.o most.o most_cdc.o lru_private.o hashtb_pb.o emulator_v2.o xstrtoumax.o
+OBJS = global.o main.o report.o timerUtils.o shmlib.o bandhash.o hashtable_utils.o cache.o trace2call.o sac.o most.o most_cdc.o lru_private.o lru_sbsc.o hashtb_pb.o emulator_v2.o xstrtoumax.o
 
 
 all: $(OBJS) sac
@@ -38,6 +38,9 @@ timerUtils.o: ${SAC_SRC}/timerUtils.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
 hashtable_utils.o: ${SAC_SRC}/hashtable_utils.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
+
+bandhash.o: ${SAC_SRC}/bandhash.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
 cache.o: ${SAC_SRC}/cache.c

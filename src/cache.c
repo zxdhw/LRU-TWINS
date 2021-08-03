@@ -251,7 +251,7 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
             n_evict = Unload_Buf_LRU_private(buf_despid_array, max_n_batch);
             break;
         case LRU_SBSC:
-            n_evict = Unload_Buf_LRU_SBSC(buf_despid_array, max_n_batch,ssd_buf_hdr);
+            n_evict = Unload_Buf_LRU_SBSC(buf_despid_array, max_n_batch);
             break;
         default:
             sac_warning("Current cache algorithm dose not support batched process.");

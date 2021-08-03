@@ -5,7 +5,6 @@
 #include "../cache.h"
 #include "lru_sbsc.h"
 #include "../shmlib.h"
-#include "hashtable_utils.h"
 #include "bandhash.h"
 
 
