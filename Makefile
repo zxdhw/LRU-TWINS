@@ -64,6 +64,9 @@ lru.o: ${SAC_ALG}/lru.c
 lru_private.o: ${SAC_ALG}/lru_private.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 
+lru_sbsc.o: ${SAC_ALG}/lru_sbsc.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
+
 lru_cdc.o: ${SAC_ALG}/lru_cdc.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $?
 

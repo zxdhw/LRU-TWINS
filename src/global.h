@@ -72,6 +72,7 @@ typedef enum
     SAC,
     MOST,
     MOST_CDC,
+    LRU_SBSC,
     LRU_private
 }SSDEvictionStrategy;
 

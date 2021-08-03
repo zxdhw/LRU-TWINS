@@ -250,6 +250,9 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
         case LRU_private:
             n_evict = Unload_Buf_LRU_private(buf_despid_array, max_n_batch);
             break;
+        case LRU_SBSC:
+            n_evict = Unload_Buf_LRU_SBSC(buf_despid_array, max_n_batch,ssd_buf_hdr);
+            break;
         default:
             sac_warning("Current cache algorithm dose not support batched process.");
             exit(EXIT_FAILURE);
@@ -299,6 +302,8 @@ initStrategySSDBuffer()
     {
     case LRU_private:
         return initSSDBufferFor_LRU_private();
+    case LRU_SBSC:
+        return initSSDBufferFor_LRU_SBSC();
     case SAC:
         return Init_SAC();
         //    case OLDPORE:
@@ -341,6 +346,8 @@ Strategy_Desp_HitIn(SSDBufDesp *desp)
         //        case LRU_global:        return hitInLRUBuffer(desp->serial_id);
     case LRU_private:
         return hitInBuffer_LRU_private(desp->serial_id);
+    case LRU_SBSC:
+        return hitInBuffer_LRU_SBSC(desp->serial_id);
     case SAC:
         return Hit_SAC(desp->serial_id, desp->ssd_buf_flag);
     case MOST:
@@ -360,6 +367,8 @@ Strategy_Desp_LogIn(SSDBufDesp *desp)
         //        case LRU_global:        return insertLRUBuffer(serial_id);
     case LRU_private:
         return insertBuffer_LRU_private(desp->serial_id);
+    case LRU_SBSC:
+        return insertBuffer_LRU_SBSC(desp->serial_id, desp->ssd_buf_tag);
         //        case LRU_batch:         return insertBuffer_LRU_batch(serial_id);
         //        case Most:              return LogInMostBuffer(desp->serial_id,desp->ssd_buf_tag);
         //    case PORE:
