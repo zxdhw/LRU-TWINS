@@ -1,5 +1,7 @@
+.vscode/
+result.txt
+README.md
 *.log
 *.req
 *.o
-.vscode/
 sac

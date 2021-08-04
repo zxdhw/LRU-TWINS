@@ -18,16 +18,26 @@ static BandHashBucket* hashitem_freelist;
 static BandHashBucket* topfree_ptr;
 static BandHashBucket* buckect_alloc();
 
+<<<<<<< HEAD
 static long insertCnt_total,deleteCnt_times;
+=======
+static long insertCnt_total,deleteCnt_total;
+>>>>>>> test
 static long insertCnt,deleteCnt;
 
 
 static void freebucket(BandHashBucket* bucket);
 int BandHashTab_Init()
 {
+<<<<<<< HEAD
     insertCnt_total = deleteCnt_times = 0;
     band_hashtable = (BandHashBucket*)malloc(sizeof(BandHashBucket)*NTABLE_SSD_CACHE);
     hashitem_freelist = (BandHashBucket*)malloc(sizeof(BandHashBucket)*NTABLE_SSD_CACHE);
+=======
+    insertCnt_total = deleteCnt_total = 0;
+    band_hashtable = (BandHashBucket*)malloc(sizeof(BandHashBucket)*NZONES);
+    hashitem_freelist = (BandHashBucket*)malloc(sizeof(BandHashBucket)*NZONES);
+>>>>>>> test
     topfree_ptr = hashitem_freelist;
 
     if(band_hashtable == NULL || hashitem_freelist == NULL)
@@ -36,14 +46,22 @@ int BandHashTab_Init()
     BandHashBucket* bucket = band_hashtable;
     BandHashBucket* freebucket = hashitem_freelist;
     int i = 0;
+<<<<<<< HEAD
     for(i = 0; i < NTABLE_SSD_CACHE; bucket++, freebucket++, i++)
+=======
+    for(i = 0; i < NZONES; bucket++, freebucket++, i++)
+>>>>>>> test
     {
         bucket->desp_serial_id = freebucket->desp_serial_id = -1;
         bucket->hash_key.BandId = freebucket->hash_key.BandId = -1;
         bucket->next_item = NULL;
         freebucket->next_item = freebucket + 1;
     }
+<<<<<<< HEAD
     hashitem_freelist[NTABLE_SSD_CACHE - 1].next_item = NULL;
+=======
+    hashitem_freelist[NZONES - 1].next_item = NULL;
+>>>>>>> test
     return 0;
 }
 
@@ -98,20 +116,37 @@ long BandHashTab_Insert(BandTag band_tag, long desp_serial_id)
     return 0;
 }
 
+<<<<<<< HEAD
 long BandHashTab_Delete(BandTag band_tag, long* out_despid_array, int cnt)
+=======
+long BandHashTab_Delete(BandTag band_tag, long * out_despid_array, int cnt)
+>>>>>>> test
 {
     if (DEBUG)
         printf("[INFO] Delete buf_tag: %lu\n",band_tag.BandId);
 
     deleteCnt = 0;
+<<<<<<< HEAD
     deleteCnt_times++;
     //printf("hashitem free times:%d\n",deleteCnt_times++);
+=======
+    deleteCnt_total++;
+    //printf("hashitem free times:%d\n",deleteCnt_total++);
+>>>>>>> test
 
     long del_id;
     BandHashBucket *delitem;
     BandHashBucket *nowbucket = GetBandHashBucket(band_tag.BandId);
+<<<<<<< HEAD
     while (nowbucket->next_item != NULL) {
         if (isSameTag(nowbucket->next_item->hash_key, band_tag) && deleteCnt < EVICT_DITRY_GRAIN) {
+=======
+
+    while (nowbucket->next_item != NULL)
+    {
+        if (isSameTag(nowbucket->next_item->hash_key, band_tag) && deleteCnt <= EVICT_DITRY_GRAIN)
+        {
+>>>>>>> test
             delitem = nowbucket->next_item;
             del_id = delitem->desp_serial_id;
             nowbucket->next_item = delitem->next_item;
@@ -120,6 +155,7 @@ long BandHashTab_Delete(BandTag band_tag, long* out_despid_array, int cnt)
 
             freebucket(delitem);
             deleteCnt++;
+<<<<<<< HEAD
             // printf("deletecnt = %d, deletecnt_times = %d\n", deleteCnt, deleteCnt_times);
         } else {
             // printf("[ERROR] band = %lu, hash_key = %lu, deletecnt = %lu \n",
@@ -128,6 +164,13 @@ long BandHashTab_Delete(BandTag band_tag, long* out_despid_array, int cnt)
         }
     }
     // printf("[INFO] band %lu total delete block %lu\n", band_tag.BandId, deleteCnt);
+=======
+        }
+        nowbucket = nowbucket->next_item;
+    }
+    
+    printf("[INFO] band %lu total delete block %lu\n", band_tag.BandId, deleteCnt);
+>>>>>>> test
 
     return (EVICT_DITRY_GRAIN > deleteCnt ? deleteCnt : EVICT_DITRY_GRAIN);
 }

@@ -17,6 +17,7 @@
 
 SSDBufDespCtrl *ssd_buf_desp_ctrl;
 SSDBufDesp *ssd_buf_desps;
+SplStat *ssd_spl_stat;
 
 /* If Defined R/W Cache Space Static Allocated */
 
@@ -90,11 +91,23 @@ init_SSDDescriptorBuffer()
         ssd_buf_desp_ctrl = (SSDBufDespCtrl *)multi_SHM_alloc(SHM_SSDBUF_DESP_CTRL, sizeof(SSDBufDespCtrl));
         ssd_buf_desps = (SSDBufDesp *)multi_SHM_alloc(SHM_SSDBUF_DESPS, sizeof(SSDBufDesp) * NBLOCK_SSD_CACHE);
 
+        // new : Memory allocation
+        ssd_spl_stat = (SplStat*)multi_SHM_alloc( SHM_SSD_SPL_STAT, sizeof(SplStat) * NZONES);
+
+
         ssd_buf_desp_ctrl->n_usedssd = 0;
         ssd_buf_desp_ctrl->first_freessd = 0;
-        multi_SHM_mutex_init(&ssd_buf_desp_ctrl->lock); // ？？？？
-
+        multi_SHM_mutex_init(&ssd_buf_desp_ctrl->lock); 
+        
+        // new : Statistics initialization
         long i;
+        SplStat* ssd_spl_hdr = ssd_spl_stat;
+        for(i = 0; i < NZONES; ssd_spl_hdr++, i++){
+            ssd_spl_hdr->band_id = i;
+            ssd_spl_hdr->cnt = 0;
+            ssd_spl_hdr->cycle = 0;
+        }
+        
         SSDBufDesp *ssd_buf_hdr = ssd_buf_desps;
         for (i = 0; i < NBLOCK_SSD_CACHE; ssd_buf_hdr++, i++)
         {
@@ -257,6 +270,31 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
             sac_warning("Current cache algorithm dose not support batched process.");
             exit(EXIT_FAILURE);
         }
+
+        //new:  Calculate the band number
+        Cycle_Length_Cur = Cycle_Length_Cur + n_evict;
+        off_t offset = 0,bandid = 0;
+        int i = 0;
+
+        for (i = 0; i < n_evict; i++) {
+            offset = ssd_buf_desps[buf_despid_array[i]].ssd_buf_tag.offset;
+            bandid = offset/(5000*4096);
+            ssd_spl_stat[bandid].cnt++;
+        }
+
+        if (Cycle_Length_Cur >= Cycle_Length) {
+            // Statistics
+            long band_num = 0;
+            for (i = 0; i < NZONES; i++ ) {
+                if (ssd_spl_stat[i].cnt != 0) {
+                    band_num++; 
+                    ssd_spl_stat[i].cnt = 0;
+                }
+            }
+            result_spl = (Cycle_Length_Cur * 1.0) / band_num; 
+            Cycle_Length_Cur = 0;
+            Count_Cycle++;
+        }  
 
         int k = 0;
         while (k < n_evict)
