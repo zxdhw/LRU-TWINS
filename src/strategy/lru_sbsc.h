@@ -4,7 +4,7 @@
 /* ---------------------------lru_sbsc---------------------------- */
 #include <sys/types.h>
 
-#define EVICT_DITRY_GRAIN 64
+#define EVICT_DITRY_GRAIN 8192
 
 typedef struct
 {

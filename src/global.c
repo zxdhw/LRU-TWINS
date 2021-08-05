@@ -34,11 +34,11 @@ struct RuntimeSTAT* STT;
 blksize_t BLKSZ = 4096;
 
 // Cache Layer
-blksize_t NBLOCK_SSD_CACHE = (8000000 / 64); // cache size = NBLOCK_SSD_CACHE * BLKSZ 
-blksize_t NTABLE_SSD_CACHE = (8000000 / 64); // equal with NBLOCK_SSD_CACHE
+blksize_t NBLOCK_SSD_CACHE = (8000000 / 32); // cache size = NBLOCK_SSD_CACHE * BLKSZ 
+blksize_t NTABLE_SSD_CACHE = (8000000 / 32); // equal with NBLOCK_SSD_CACHE
 
 // SMR layer
-blksize_t NBLOCK_SMR_PB = 10 * 5000; //size: block * 4kB 
+blksize_t NBLOCK_SMR_PB = 30 * 5000; //size: block * 4kB 
 blkcnt_t  NZONES = 400000;/* size = 8TB */ //194180;    // NZONES * ZONESZ =
 blksize_t ZONESZ = 5000 * 4096;//20MB    // Unit: Byte.
 

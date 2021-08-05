@@ -245,7 +245,7 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
         else if (STT->incache_n_dirty == 0)
             suggest_type = ENUM_B_Clean;
 
-        static int max_n_batch = 1024;
+        static int max_n_batch = 10240;
         long buf_despid_array[max_n_batch];
         int n_evict;
         switch (EvictStrategy)

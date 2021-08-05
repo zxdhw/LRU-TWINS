@@ -461,7 +461,7 @@ getBandOffset(off_t blk_off)       //获取当前块所在band的起始
 }
 
 void Emu_PrintStatistic()
-{
+{   
     printf("----------------EMULATION------------\n");
 #ifndef EMU_NO_DISK_IO
     printf("Time:\n");

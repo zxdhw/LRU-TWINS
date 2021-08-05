@@ -293,8 +293,8 @@ static void reportspl()
 
     if (Count_Cycle == 1) {
         fprintf( fp, "--------------------SPL_RESULT---------------------\n");
-        fprintf(fp, "Cycle_Length= %lfMB SSD_size= %lfMB \n", 
-                            Cycle_Length/1000.0*4.0, NBLOCK_SSD_CACHE/1000.0*4.0);
+        fprintf(fp, "Cycle_Length= %lfMB SSD_size= %lfMB, EVICT_DITRY_GRAIN = %d\n", 
+                    Cycle_Length/1000.0*4.0, NBLOCK_SSD_CACHE/1000.0*4.0, EVICT_DITRY_GRAIN);
     }
     fprintf(fp,"count_cycle:%ld  splreslut:%lf \n", Count_Cycle, result_spl);
     fclose(fp);
