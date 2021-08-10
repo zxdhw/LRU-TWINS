@@ -250,6 +250,8 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
         case LRU_private:
             n_evict = Unload_Buf_LRU_private(buf_despid_array, max_n_batch);
             break;
+        case SLA_BM:
+            n_evict = LogOut_SlaBm(buf_despid_array, max_n_batch);
         default:
             sac_warning("Current cache algorithm dose not support batched process.");
             exit(EXIT_FAILURE);
@@ -307,6 +309,8 @@ initStrategySSDBuffer()
         return Init_most();
     case MOST_CDC:
         return Init_most_cdc();
+    case SLA_BM:
+        return Init_SlaBm();
     }
     return -1;
 }
@@ -347,6 +351,8 @@ Strategy_Desp_HitIn(SSDBufDesp *desp)
         return Hit_most(desp->serial_id, desp->ssd_buf_flag);
     case MOST_CDC:
         return Hit_most_cdc(desp->serial_id, desp->ssd_buf_flag);
+    case SLA_BM:
+        return Hit_SlaBm(desp->serial_id, desp->ssd_buf_flag);
     }
     return -1;
 }
@@ -376,6 +382,8 @@ Strategy_Desp_LogIn(SSDBufDesp *desp)
         return LogIn_most(desp->serial_id, desp->ssd_buf_tag, desp->ssd_buf_flag);
     case MOST_CDC:
         return LogIn_most_cdc(desp->serial_id, desp->ssd_buf_tag, desp->ssd_buf_flag);
+    case SLA_BM:
+        return LogIn_SlaBm(desp->serial_id, desp->ssd_buf_tag, desp->ssd_buf_flag);
     }
     return -1;
 }
