@@ -1,3 +1,5 @@
+.vscode/
+result.txt
 *.log
 *.req
 *.o

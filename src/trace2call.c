@@ -23,6 +23,8 @@ extern struct RuntimeSTAT *STT;
 static void reportCurInfo();
 static void report_ontime();
 static void resetStatics();
+static void reportspl();
+// static void reportspl_detail();
 
 static timeval tv_trace_start, tv_trace_end;
 static double time_trace;
@@ -40,6 +42,8 @@ extern int IsHit;
 char logbuf[512];
 FILE *log_lat;
 char log_lat_path[] = "./logs/iolat.log";
+char resultspl_path[] = "./result.txt";
+char resultspl_detail_path[] = "./result_detail.txt";
 
 void trace_to_iocall(FILE *trace, off_t startLBA)
 {
@@ -73,7 +77,7 @@ void trace_to_iocall(FILE *trace, off_t startLBA)
     int i;
     for (i = 0; i < 16 * BLKSZ; i++)
     {
-        ssd_buffer[i] = '1';    //对分配的空间初始化
+        ssd_buffer[i] = '1';
     } 
 
     _TimerLap(&tv_trace_start);
@@ -108,7 +112,7 @@ void trace_to_iocall(FILE *trace, off_t startLBA)
             reportCurInfo();
             resetStatics(); // Reset the statistics of warming phrase, cuz we don't care.
             isFullSSDcache = 1;  
-        }  //？？？？？？？
+        } 
 
 #ifdef LOG_SINGLE_REQ
         _TimerLap(&tv_req_start);
@@ -167,6 +171,8 @@ void trace_to_iocall(FILE *trace, off_t startLBA)
             report_ontime();
             if (STT->reqcnt_s % ((blkcnt_t)REPORT_INTERVAL * 500) == 0)
             {
+                printf("----------trace reqcnt beyond limits-------------\n");
+
                 reportCurInfo();
                 // resetStatics();
                 if (EMULATION)
@@ -175,6 +181,12 @@ void trace_to_iocall(FILE *trace, off_t startLBA)
                     // Emu_ResetStatisic();
                 }
             }
+        }
+        // output spl info
+        if(Count_Cycle > flag ){
+            flag = Count_Cycle;
+            reportspl();
+            // reportspl_detail();
         }
     }
 
@@ -257,3 +269,45 @@ static void resetStatics()
     STT->hashmiss_write = 0;
     msec_bw_hdd = 0;
 }
+
+/* print result*/
+// static void reportspl(){
+
+//         Cycle_Length_Cur = 0;
+//         flag = 0;
+//         
+//         if(Count_Cycle = 1){
+//         printf("--------------------SPL_RESULT---------------------\n");
+//         }
+//         printf(" count_cycle:%ld  splreslut:%lf \n", Count_Cycle, result_spl);
+
+// }
+
+/* Output result to file */
+static void reportspl()
+{
+
+    // 对数据进行输出
+    FILE *fp;
+    fp=fopen(resultspl_path,"a+");
+
+    if (Count_Cycle == 1) {
+        fprintf( fp, "--------------------SPL_RESULT---------------------\n");
+        fprintf(fp, "Cycle_Length= %lfMB SSD_size= %lfMB \n", 
+                            Cycle_Length/1000.0*4.0, NBLOCK_SSD_CACHE/1000.0*4.0);
+    }
+    fprintf(fp,"count_cycle:%ld  splreslut:%lf \n", Count_Cycle, result_spl);
+    fclose(fp);
+}
+
+// static void reportspl_detail()
+// {
+//     FILE *fp;
+//     fp=fopen(resultspl_detail_path,"a+");
+
+//     if (Count_Cycle == 1) {
+//         fprintf( fp, "--------------------SPL_RESULT_DETAIL---------------------\n");
+        
+//     }
+//     fclose(fp);
+// }

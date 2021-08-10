@@ -85,6 +85,11 @@ extern off_t StartLBA;
 extern int Workload_Mode;
 extern SSDEvictionStrategy EvictStrategy;
 extern long Cycle_Length;
+// spl info
+extern long Cycle_Length_Cur;
+extern long Count_Cycle;
+extern double result_spl;
+extern long flag;
 
 extern int NO_REAL_DISK_IO;
 extern int NO_CACHE;
@@ -130,10 +135,3 @@ extern char* SHM_SSDBUF_HASHDESPS;
 extern char* SHM_PROCESS_REQ_LOCK;
 
 #endif //_GLOBAL_H
-
-
-
-
-
-
-
