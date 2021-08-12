@@ -265,6 +265,7 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
             break;
         case SLA_BM:
             n_evict = LogOut_SlaBm(buf_despid_array, max_n_batch);
+            break;
         default:
             sac_warning("Current cache algorithm dose not support batched process.");
             exit(EXIT_FAILURE);
@@ -281,7 +282,7 @@ allocSSDBuf(SSDBufTag ssd_buf_tag, int *found, int alloc4What)
             ssd_spl_stat[bandid].cnt++;
         }
 
-        if (Cycle_Length_Cur >= Cycle_Length) {
+        if (Cycle_Length_Cur >= DEFINE_CYCLE_LENGTH) {
             // Statistics
             long band_num = 0;
             for (i = 0; i < NZONES; i++ ) {

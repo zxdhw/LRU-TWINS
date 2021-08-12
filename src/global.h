@@ -105,6 +105,7 @@ extern blksize_t NTABLE_SSD_CACHE; // equal with NBLOCK_SSD_CACHE
 
 // SMR layer
 extern blksize_t NBLOCK_SMR_PB;
+extern long DEFINE_CYCLE_LENGTH;
 extern blkcnt_t  NZONES;
 extern blksize_t ZONESZ;
 

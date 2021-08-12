@@ -2,6 +2,7 @@
 #include "sla_bm.h"
 #include "../statusDef.h"
 #include "../report.h"
+
 typedef struct Dscptr
 {
     long serial_id;
@@ -23,7 +24,7 @@ typedef struct ZoneCtrl
     long cur_pagecnt_clean;
     long head, tail;
     int activate_after_n_cycles;
-    double score;
+    long score;
 } ZoneCtrl;
 
 static Dscptr *GlobalDespArray;
@@ -32,12 +33,12 @@ static ZoneCtrl *ZoneCtrlArray;
 static unsigned long *ZoneSortArray; /* The zone ID array sorted by weight(calculated customized). it is used to determine the open zones */
 static int OpenZoneCnt;              /* It represent the number of open zones and the first number elements in 'ZoneSortArray' is the open zones ID */
 
-extern long Cycle_Length;   /* The period lenth which defines the times of eviction triggered */
 static long PeriodProgress; /* Current times of eviction in a period lenth */
 static long StampGlobal;    /* Current io sequenced number in a period lenth, used to distinct the degree of heat among zones */
 static int IsNewPeriod;
+static int times_series_flag = 0;
+char lrfu_path[] = "./lrfu.txt";
 // static int blkcnt = 0;
-
 
 static void add2ArrayHead(Dscptr *desp, ZoneCtrl *zoneCtrl);
 static void move2ArrayHead(Dscptr *desp, ZoneCtrl *zoneCtrl);
@@ -59,7 +60,6 @@ getZoneNum(size_t offset)
 /* Process Function */
 int Init_SlaBm()
 {
-    Cycle_Length = NBLOCK_SMR_PB;
     StampGlobal = PeriodProgress = 0;
     IsNewPeriod = 0;
     GlobalDespArray = (Dscptr *)malloc(sizeof(Dscptr) * NBLOCK_SSD_CACHE);
@@ -85,10 +85,11 @@ int Init_SlaBm()
         ZoneCtrl *ctrl = ZoneCtrlArray + i;
         ctrl->zoneId = i;
         ctrl->heat = ctrl->pagecnt_clean = ctrl->pagecnt_dirty = 0;
-        ctrl->cur_pagecnt_dirty = ctrl->cur_pagecnt_clean = 0;
         ctrl->head = ctrl->tail = -1;
         ctrl->score = -1;
         ZoneSortArray[i] = 0;
+        ctrl->cur_pagecnt_clean = ctrl->cur_pagecnt_dirty = 0;
+    
         i++;
     }
     return 0;
@@ -124,7 +125,7 @@ int LogOut_SlaBm(long *out_despid_array, int max_n_batch)
 {
     static int periodCnt = 0;
     static ZoneCtrl *chosenOpZone;
-    if (PeriodProgress % Cycle_Length == 0 || chosenOpZone->tail < 0)
+    if (PeriodProgress % DEFINE_CYCLE_LENGTH == 0 || chosenOpZone->tail < 0)
     {
         redefineOpenZones();
         PeriodProgress = 0;
@@ -148,9 +149,7 @@ int LogOut_SlaBm(long *out_despid_array, int max_n_batch)
         if ((evitedDesp->flag & SSD_BUF_DIRTY) != 0)
         {
             chosenOpZone->pagecnt_dirty--; /**< Decision indicators */
-        }
-        else
-        {
+        } else {
             chosenOpZone->pagecnt_clean--; /**< Decision indicators */
         }
         clearDesp(evitedDesp);
@@ -311,16 +310,24 @@ extractNonEmptyZoneId()
 static void
 pause_and_caculate_weight_sizedivhot()
 {
+    // // 对数据进行输出
+    // FILE *fp;
+    // fp=fopen(lrfu_path,"a+");
     int n = 0;
+
     while (n < NZONES)
     {
         ZoneCtrl *ctrl = ZoneCtrlArray + n;
-        ctrl->score = ctrl->score * 0.5;
-        ctrl->score += ctrl->cur_pagecnt_dirty + ctrl->cur_pagecnt_clean;
+        ctrl->score = ctrl->pagecnt_clean * 4 + ctrl->pagecnt_dirty;
+        ctrl->score -= 0.5 * (ctrl->cur_pagecnt_dirty + ctrl->cur_pagecnt_clean); 
+        // if(ctrl->score != 0){
+        //     fprintf(fp, "%ld, %ld\n", ctrl->score, ctrl->cur_pagecnt_dirty + ctrl->cur_pagecnt_clean);
+        // }       
         ctrl->cur_pagecnt_dirty = 0;
         ctrl->cur_pagecnt_clean = 0;
         n++;
     }
+    // fclose(fp);
 }
 
 static int
