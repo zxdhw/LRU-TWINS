@@ -36,7 +36,8 @@ static int OpenZoneCnt;              /* It represent the number of open zones an
 static long PeriodProgress; /* Current times of eviction in a period lenth */
 static long StampGlobal;    /* Current io sequenced number in a period lenth, used to distinct the degree of heat among zones */
 static int IsNewPeriod;
-static int times_series_flag = 0;
+static int cycle_band_num = 1;
+static int cur_cycle_band_num = 0;
 char lrfu_path[] = "./lrfu.txt";
 // static int blkcnt = 0;
 
@@ -89,7 +90,7 @@ int Init_SlaBm()
         ctrl->score = -1;
         ZoneSortArray[i] = 0;
         ctrl->cur_pagecnt_clean = ctrl->cur_pagecnt_dirty = 0;
-    
+        ctrl->activate_after_n_cycles = 0;
         i++;
     }
     return 0;
@@ -125,6 +126,7 @@ int LogOut_SlaBm(long *out_despid_array, int max_n_batch)
 {
     static int periodCnt = 0;
     static ZoneCtrl *chosenOpZone;
+
     if (PeriodProgress % DEFINE_CYCLE_LENGTH == 0 || chosenOpZone->tail < 0)
     {
         redefineOpenZones();
@@ -156,6 +158,7 @@ int LogOut_SlaBm(long *out_despid_array, int max_n_batch)
         PeriodProgress++;
         cnt++;
     }
+    // printf("Period [%d], cnt=%d\n", periodCnt, cnt);
     return cnt;
 }
 
@@ -304,27 +307,30 @@ extractNonEmptyZoneId()
         }
         zoneId++;
     }
+    cycle_band_num = (cnt > cycle_band_num) ? cycle_band_num : cnt;
     return cnt;
 }
 
 static void
 pause_and_caculate_weight_sizedivhot()
 {
-    // // 对数据进行输出
+    // 对数据进行输出
     // FILE *fp;
     // fp=fopen(lrfu_path,"a+");
     int n = 0;
 
     while (n < NZONES)
-    {
+    {   
         ZoneCtrl *ctrl = ZoneCtrlArray + n;
-        ctrl->score = ctrl->pagecnt_clean * 4 + ctrl->pagecnt_dirty;
-        ctrl->score -= 0.5 * (ctrl->cur_pagecnt_dirty + ctrl->cur_pagecnt_clean); 
+        ctrl->score = ctrl->pagecnt_clean + ctrl->pagecnt_dirty * 0;
+        ctrl->score = ctrl->score
+                        -ctrl->cur_pagecnt_dirty
+                        -ctrl->cur_pagecnt_clean; 
         // if(ctrl->score != 0){
         //     fprintf(fp, "%ld, %ld\n", ctrl->score, ctrl->cur_pagecnt_dirty + ctrl->cur_pagecnt_clean);
         // }       
-        ctrl->cur_pagecnt_dirty = 0;
-        ctrl->cur_pagecnt_clean = 0;
+        ctrl->cur_pagecnt_dirty = ctrl->cur_pagecnt_dirty * 0.5;
+        ctrl->cur_pagecnt_clean = ctrl->cur_pagecnt_clean * 0.5;
         n++;
     }
     // fclose(fp);
@@ -348,7 +354,7 @@ redefineOpenZones()
     //               ZoneCtrlArray[ZoneSortArray[i]].pagecnt_dirty,
     //               ZoneCtrlArray[ZoneSortArray[i]].pagecnt_clean);
     //    }
-
+    cur_cycle_band_num = 0;
     OpenZoneCnt = 1;
     IsNewPeriod = 1;
     printf("NonEmptyZoneCnt = %ld.\n", nonEmptyZoneCnt);
@@ -357,8 +363,20 @@ redefineOpenZones()
 
 static ZoneCtrl *
 getEvictZone()
-{
-    return ZoneCtrlArray + ZoneSortArray[0];
+{   
+    ZoneCtrl *ret = ZoneCtrlArray + ZoneSortArray[cur_cycle_band_num++];
+    while (ret->activate_after_n_cycles != 0) {
+        ret->activate_after_n_cycles--;
+        if (cur_cycle_band_num < cycle_band_num) {
+            ret = ZoneCtrlArray + ZoneSortArray[cur_cycle_band_num++];
+        } else if (cur_cycle_band_num >= cycle_band_num) {
+            redefineOpenZones();
+            ret = ZoneCtrlArray + ZoneSortArray[cur_cycle_band_num++];
+        }
+    }
+
+    ret->activate_after_n_cycles = 1;
+    return ret;
 }
 
 static long

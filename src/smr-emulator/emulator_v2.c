@@ -427,10 +427,14 @@ flushFIFO()
     STT->n_RMW ++;
 
     char log[256];
-    sprintf(log,"[Emulator]: RMW number:%lu, write amplifcation:%f\n",STT->n_RMW, wtrAmp);
+    sprintf(log,"%lu,",STT->n_RMW);
     sac_log(log, Log_emu);
-    sprintf(log,"[Emulator]: dirty blocks in band colect=%ld, bandsize=%ld\n", dirty_n_inBand, thisBandSize/BLKSZ);
+    sprintf(log,"%ld,%ld\n", dirty_n_inBand, thisBandSize/BLKSZ);
     sac_log(log, Log_emu);
+    // sprintf(log,"[Emulator]: RMW number:%lu, write amplifcation:%f\n",STT->n_RMW, wtrAmp);
+    // sac_log(log, Log_emu);
+    // sprintf(log,"[Emulator]: dirty blocks in band colect=%ld, bandsize=%ld\n", dirty_n_inBand, thisBandSize/BLKSZ);
+    // sac_log(log, Log_emu);
 }
 
 static unsigned long
